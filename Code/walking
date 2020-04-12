@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Apr 10 10:11:15 2020
+
+@author: Elzette
+"""
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+
+
+def get_path(target, grid):
+            
+    """
+        g_x = grad_x[x][y]
+        g_y = grad_x[y][y]
+ 
+        
+        x_new = path[-1][0] +h*g_x
+        y_new = path[-1][0] +h*g_y
+        path.append((x_new,y_new))
+        
+
+       
+        if x_new == math.nan:
+            x_new = 0
+            
+        if y_new == math.nan:
+            y_new = 0
+            
+        x = int(np.round(x_new))
+        y = int(np.round(y_new))
+
+        if x>len(grid)-1 or x<0:
+           break
+        if y>len(grid)-1 or y<0:
+            break
+    """
+    
+    #h = 0.01
+    grad_x, grad_y = get_grad(grid)    
+    joint = [[(grad_x[i][j]**2 +grad_y[i][j]**2 )**.5 for j in range(len(grid))]for i in range(len(grid[0]))]
+    
+    x = target.x
+    y = target.y
+    path = [(x,y) ]
+    
+    k = 0
+    
+    while grid[x][y].T >= 0:
+       
+        k += 1
+
+        if k > 50000:
+            break 
+
+        cel = grid[x][y]
+        neigh = neighbours(grid,cel)
+        coord = [ (item.x,item.y) for item in neigh]
+
+        mint = math.inf
+        cur = None
+        for (x,y) in coord:
+            if joint[x][y] < mint:
+                cur = (x,y)
+        
+        path.append(cur)
+        
+        #x = int(np.round(x_new))
+        #y = int(np.round(y_new))
+        
+        #if x>len(grid)-1 or x<0:
+        #   break
+        #if y>len(grid)-1 or y<0:
+         #   break
+                
+    #path.append((0,0))
+    
+  
+    plt.plot([item[0] for item in path],[item[1] for item in path],color='red')
+    values = [[cel.T for cel in item] for item in grid ]
+    z= np.array([np.array([math.nan if i >= 50 else i for i in item]) for item in values])
+    plt.contour( z, 10)
+    plt.colorbar()
+    plt.show()
+    
+    
+    
+    plt.subplot(111)
+    data= [ [math.nan if i >= 20 else i for i in item] for item in values]
+    plt.plot([item[0] for item in path],[item[1] for item in path],color='red')
+    plt.imshow(data, interpolation="None")
+      
+    return path 
+
+
+def get_grad(time_grid):
+    """time grid: grid giving time at x,y"""
+    print(00)
+
+    values = [[cel.T for cel in item] for item in time_grid ]
+    #values= [[math.nan if i >= 50 else i for i in item] for item in values]
+    
+     
+    g_x = np.matrix([[1,0,-1],[2,0,-2],[1,0,-1]])
+    
+    g_y = np.matrix([[1,2,1],[0,0,0],[-1,-2,-1]])
+    
+    
+    grad_x = signal.convolve2d(values, g_x,  mode='same')
+    grad_y = signal.convolve2d(values,g_y,  mode='same')    
+    return grad_x,grad_y
+
+
+
+def neighbours(grid,cel):
+    row = len(grid)
+    column =  len(grid[0])
+    x,y = cel.x,cel.y
+    
+    foo = []
+    
+    if x>1 and y>1:
+        foo.append(grid[x-1][y-1])  
+    
+    if y< column-2 and x<row-2:
+           foo.append(grid[x+1][y+1])
+           
+    if x>1 and y< column-2:
+        foo.append(grid[x-1][y+1])  
+    
+    if y>1 and x<row-2:
+           foo.append(grid[x+1][y-1])
+    
+    if x>1:
+        foo.append(grid[x-1][y])
+
+       
+    if y< column-1:
+           foo.append(grid[x][y+1])
+        
+    if x<row-1:
+        foo.append(grid[x+1][y])
+               
+    if y>1:      
+      foo.append(grid[x][y-1])  
+      
+      
+
+           
+    return foo
+
+def get_path2(target, grid):
+            
+    """
+        g_x = grad_x[x][y]
+        g_y = grad_x[y][y]
+ 
+        
+        x_new = path[-1][0] +h*g_x
+        y_new = path[-1][0] +h*g_y
+        path.append((x_new,y_new))
+        
+
+       
+        if x_new == math.nan:
+            x_new = 0
+            
+        if y_new == math.nan:
+            y_new = 0
+            
+        x = int(np.round(x_new))
+        y = int(np.round(y_new))
+
+        if x>len(grid)-1 or x<0:
+           break
+        if y>len(grid)-1 or y<0:
+            break
+    """
+    
+  
+    x = target.x
+    y = target.y
+    path = [(x,y) ]
+    
+    k = 0
+    
+    while grid[x][y].T >= 0:
+        k += 1
+        print(k)
+        if k > 700:
+            break 
+        cel = grid[x][y]
+        neigh = neighbours(grid,cel)
+        
+        i = np.argmax([-1*item.T for item in neigh])
+        x,y = neigh[i].x,neigh[i].y
+        
+        #g_x = grad_x[x][y]
+        #g_y = grad_x[y][y]
+ 
+        
+        #x_new = path[-1][0] +h*g_x
+        #y_new = path[-1][0] +h*g_y
+        path.append((x,y))
+        
+        #x = int(np.round(x_new))
+        #y = int(np.round(y_new))
+        
+        #if x>len(grid)-1 or x<0:
+        #   break
+        #if y>len(grid)-1 or y<0:
+         #   break
+                
+    path.append((0,0))
+    plt.plot([item[0] for item in path],[item[1] for item in path],color='red')
+    #values = [[cel.T for cel in item] for item in grid ]
+    #data= [ [math.nan if i >= 50 else i for i in item] for item in values]
+
+    #plt.subplot(111)
+    #plt.imshow(data, interpolation="None")
+    values = [[cel.T for cel in item] for item in grid ]
+    z= np.array([np.array([math.nan if i >= 50 else i for i in item]) for item in values])
+    plt.contour( z, 10)
+    plt.colorbar()
+    plt.show()
+    
+    
+    
+    plt.subplot(111)
+    values = [[cel.T for cel in item] for item in grid ]
+    data= [ [math.nan if i >= 50 else i for i in item] for item in values]
+    plt.plot([item[0] for item in path],[item[1] for item in path],color='red')
+    plt.imshow(data, interpolation="None")
+    plt.colorbar()
+    plt.show()
+    
+    return 0
+             
+     
